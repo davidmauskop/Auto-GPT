@@ -1,0 +1,44 @@
+services:
+  # AutoGPT
+  - type: worker
+    name: autogpt 
+    region: oregon
+    plan: starter
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars: 
+      - key: OPENAI_API_KEY 
+        sync: false
+      - key: MEMORY_BACKEND
+        value: weaviate
+      - key: WEAVIATE_HOST
+        fromService:
+          type: pserv
+          name: weaviate
+          property: host
+      - key: WEAVIATE_PORT
+        value: 8080
+
+  # Weaviate vector database
+  - type: pserv
+    name: weaviate
+    region: oregon
+    plan: starter
+    env: docker
+    dockerfilePath: ./Dockerfile.weaviate
+    autoDeploy: false
+    disk:
+      name: weaviate-data
+      mountPath: /var/lib/weaviate
+      sizeGB: 4
+    envVars:
+      - key: QUERY_DEFAULTS_LIMIT
+        value: 25
+      - key: AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED
+        value: true
+      - key: PERSISTENCE_DATA_PATH
+        value: /var/lib/weaviate
+      - key: DEFAULT_VECTORIZER_MODULE
+        value: none
+      - key: CLUSTER_HOSTNAME
+        value: node1
